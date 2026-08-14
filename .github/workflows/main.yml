@@ -18,12 +18,12 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
-    # Шаг 1: Если вы загрузили проект в виде ZIP-архива, распаковываем его
+    # Шаг 1: Если проект залит в архиве, распаковываем его
     - name: Unzip project if needed
       run: |
         find . -name "*.zip" -exec unzip -o {} \; || true
 
-    # Шаг 2: Ищем файл settings.gradle или settings.gradle.kts в любой подпапке
+    # Шаг 2: Автоматически находим папку, где лежит проект
     - name: Find Project Root Directory
       id: find-dir
       run: |
@@ -37,11 +37,11 @@ jobs:
         echo "Found project directory at: $PROJECT_DIR"
         echo "dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
 
-    # Шаг 3: Настраиваем Gradle
+    # Шаг 3: Настраиваем Gradle (Обновлено до требуемой версии 8.7)
     - name: Validate and Setup Gradle
       run: |
         cd ${{ steps.find-dir.outputs.dir }}
-        gradle wrapper --gradle-version 8.5
+        gradle wrapper --gradle-version 8.7
         chmod +x gradlew
 
     # Шаг 4: Компилируем приложение
