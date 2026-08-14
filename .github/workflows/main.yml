@@ -18,7 +18,7 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
-    # Этот шаг автоматически найдет папку, где лежит файл settings.gradle.kts
+    # Автоматически находим папку, где лежит проект
     - name: Find Project Root Directory
       id: find-dir
       run: |
@@ -29,17 +29,20 @@ jobs:
         echo "Found project directory at: $PROJECT_DIR"
         echo "dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
 
+    # Настраиваем Gradle (исправлена точка доступа)
     - name: Validate and Setup Gradle
       run: |
-        cd ${{ steps: find-dir.outputs.dir }}
+        cd ${{ steps.find-dir.outputs.dir }}
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
 
+    # Запускаем компиляцию (исправлена точка доступа)
     - name: Build Debug APK
       run: |
-        cd ${{ steps: find-dir.outputs.dir }}
+        cd ${{ steps.find-dir.outputs.dir }}
         ./gradlew assembleDebug --no-daemon
 
+    # Собираем готовый файл
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
