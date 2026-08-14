@@ -18,7 +18,12 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
-    # Автоматически находим папку, где лежит проект
+    # Шаг 1: Если вы загрузили проект в виде ZIP-архива, распаковываем его
+    - name: Unzip project if needed
+      run: |
+        find . -name "*.zip" -exec unzip -o {} \; || true
+
+    # Шаг 2: Ищем файл settings.gradle или settings.gradle.kts в любой подпапке
     - name: Find Project Root Directory
       id: find-dir
       run: |
@@ -26,23 +31,26 @@ jobs:
         if [ -z "$PROJECT_DIR" ]; then
           PROJECT_DIR=$(find . -name "settings.gradle" -exec dirname {} \+ | head -n 1)
         fi
+        if [ -z "$PROJECT_DIR" ]; then
+          PROJECT_DIR="."
+        fi
         echo "Found project directory at: $PROJECT_DIR"
         echo "dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
 
-    # Настраиваем Gradle (исправлена точка доступа)
+    # Шаг 3: Настраиваем Gradle
     - name: Validate and Setup Gradle
       run: |
         cd ${{ steps.find-dir.outputs.dir }}
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
 
-    # Запускаем компиляцию (исправлена точка доступа)
+    # Шаг 4: Компилируем приложение
     - name: Build Debug APK
       run: |
         cd ${{ steps.find-dir.outputs.dir }}
         ./gradlew assembleDebug --no-daemon
 
-    # Собираем готовый файл
+    # Шаг 5: Сохраняем готовый файл
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
