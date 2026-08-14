@@ -18,21 +18,31 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
-    # Указываем серверу зайти в папку с проектом и создать там настройки Gradle
-    - name: Validate and Setup Gradle
-      working-directory: ./HorrorVoice_2.0_Android_Project
+    # Этот шаг автоматически найдет папку, где лежит файл settings.gradle.kts
+    - name: Find Project Root Directory
+      id: find-dir
       run: |
+        PROJECT_DIR=$(find . -name "settings.gradle.kts" -exec dirname {} \+ | head -n 1)
+        if [ -z "$PROJECT_DIR" ]; then
+          PROJECT_DIR=$(find . -name "settings.gradle" -exec dirname {} \+ | head -n 1)
+        fi
+        echo "Found project directory at: $PROJECT_DIR"
+        echo "dir=$PROJECT_DIR" >> $GITHUB_OUTPUT
+
+    - name: Validate and Setup Gradle
+      run: |
+        cd ${{ steps: find-dir.outputs.dir }}
         gradle wrapper --gradle-version 8.5
         chmod +x gradlew
 
-    # Собираем приложение прямо внутри папки проекта
     - name: Build Debug APK
-      working-directory: ./HorrorVoice_2.0_Android_Project
-      run: ./gradlew assembleDebug --no-daemon
+      run: |
+        cd ${{ steps: find-dir.outputs.dir }}
+        ./gradlew assembleDebug --no-daemon
 
-    # Забираем готовый APK из подпапки
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: horror-voice-apk
-        path: HorrorVoice_2.0_Android_Project/app/build/outputs/apk/debug/app-debug.apk
+        path: |
+          **/build/outputs/apk/debug/*-debug.apk
