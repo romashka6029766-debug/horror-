@@ -1,0 +1,28 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ] # Сборка будет запускаться при каждом обновлении ветки main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # GitHub бесплатно выделит виртуальный сервер на Linux
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4 # Копируем ваш код на сервер
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4 # Устанавливаем Java (нужна для сборки Android)
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Build APK
+      run: ./gradlew assembleDebug # Команда, которая запускает компиляцию APK
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4 # Сохраняем готовый файл, чтобы вы могли его скачать
+      with:
+        name: my-app-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
