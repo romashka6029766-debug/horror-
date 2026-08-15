@@ -12,12 +12,12 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    # Меняем Java 21 на Java 8 (1.8), как просит компилятор вашего приложения
-    - name: Set up JDK 8
+    # Возвращаем Java 17, чтобы сам Gradle запустился без ошибок
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '8'
+        java-version: '17'
 
     # Шаг 1: Если проект залит в архиве, распаковываем его
     - name: Unzip project if needed
@@ -45,11 +45,12 @@ jobs:
         gradle wrapper --gradle-version 8.7
         chmod +x gradlew
 
-    # Шаг 4: Компилируем приложение
+    # Шаг 4: Компилируем приложение с принудительным указанием целевой версии Java 1.8 (8)
+    # Это исправит ту самую ошибку Inconsistent JVM-target из прошлых шагов
     - name: Build Debug APK
       run: |
         cd ${{ steps.find-dir.outputs.dir }}
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug -Pandroid.skipcompilerversioncheck=true -Dorg.gradle.jvmargs="-Xmx2048m" --no-daemon
 
     # Шаг 5: Сохраняем готовый файл
     - name: Upload Finished APK
